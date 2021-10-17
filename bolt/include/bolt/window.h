@@ -2,6 +2,8 @@
 
 #include "bolt/exports.h"
 
+#include <cstdint>
+
 namespace bolt
 {
 	enum MOUSE_BUTTON
@@ -73,6 +75,7 @@ namespace bolt
 		EVENT_TYPE_KEY_RELEASE,
 		// window events
 		EVENT_TYPE_WINDOW_RESIZE,
+		EVENT_TYPE_WINDOW_REPAINT,
 		EVENT_TYPE_WINDOW_CLOSE
 	};
 
@@ -112,6 +115,12 @@ namespace bolt
 		Event last_event;
 	};
 
+	union Pixel
+	{
+		struct { uint8_t b, g, r, a; };
+		uint32_t as_uint; // 0xAARRGGBB
+	};
+
 	// create a new window
 	//   title: string for window title
 	//   width: int client area width
@@ -127,4 +136,9 @@ namespace bolt
 	//   return: boolean that descripe if we still have unprocessed events in the queue to poll
 	// the function will set window->last_event with the last event we successfully polled.
 	BOLT_EXPORT bool window_poll(Window *window);
+
+	// copy/stretch the pixels in to the window
+	//   window: pointer to the window
+	//   pixels: pointer to array of pixels [width * height]
+	BOLT_EXPORT void window_blit(Window *window, Pixel *pixels, int width, int height);
 }

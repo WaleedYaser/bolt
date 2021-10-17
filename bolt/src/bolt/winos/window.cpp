@@ -170,6 +170,11 @@ namespace bolt
 				self->height = HIWORD(lparam);
 				break;
 			}
+			case WM_PAINT:
+			{
+				self->last_event.type = EVENT_TYPE_WINDOW_REPAINT;
+				break;
+			}
 			case WM_CLOSE:
 			case WM_DESTROY:
 			{
@@ -268,6 +273,36 @@ namespace bolt
 		DispatchMessage(&msg);
 
 		return true;
+	}
+
+	void
+	window_blit(Window *window, Pixel *pixels, int width, int height)
+	{
+		HWND hwnd = (HWND)window->native_handle;
+
+		HDC hdc = ::GetDC(hwnd);
+		assert(hdc && "[bolt/window]: failed to get device context");
+
+		BITMAPINFO bitmap_info = {};
+		bitmap_info.bmiHeader.biSize = sizeof(bitmap_info.bmiHeader);
+		bitmap_info.bmiHeader.biWidth = width;
+		bitmap_info.bmiHeader.biHeight = -height; // negative to have origin at top left corner
+		bitmap_info.bmiHeader.biPlanes = 1;
+		bitmap_info.bmiHeader.biBitCount = 32;
+		bitmap_info.bmiHeader.biCompression = BI_RGB;
+
+		int copied_scan_lines = ::StretchDIBits(
+			hdc,
+			0, 0, window->width, window->height, // destination
+			0, 0, width, height, // source
+			pixels,
+			&bitmap_info,
+			DIB_RGB_COLORS,
+			SRCCOPY);
+		assert(copied_scan_lines && "[bolt/window]: failed to copy pixels to window rect");
+
+		int res = ::ReleaseDC(hwnd, hdc);
+		assert(res && "[bolt/window]: failed to release device context");
 	}
 }
 
