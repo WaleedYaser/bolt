@@ -7,7 +7,6 @@ generate_export_header(bolt
 
 target_sources(bolt PRIVATE
 	include/bolt/exports.h
-	include/bolt/defines.h
 	include/bolt/window.h
 	src/bolt/winos/window.cpp
 )
